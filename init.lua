@@ -37,6 +37,15 @@ local formspec = "size[8,10]" ..
     "listring[current_player;main]" ..
     default.get_hotbar_bg(0, 5.85)
 
+-- Deny these items to reduce itemstring size
+local prohibited_items = {
+    -- Matryoshka doll
+    ["basket:basket"] = true,
+    -- Digtron crates
+    ["digtron:loaded_crate"] = true,
+    ["digtron:loaded_locked_crate"] = true,
+}
+
 local node_def = {
     tiles = {
         "cardboard_box_inner.png^basket_top.png",
@@ -147,6 +156,10 @@ local node_def = {
         minetest.set_node(pos, { name = "air" })
         return true
     end,
+    allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+        if prohibited_items[stack:get_name()] then return 0 end
+        return stack:get_count()
+    end,
     stack_max = 1,
     on_blast = function() end,
     on_drop = function(itemstack) return itemstack end,
@@ -161,6 +174,7 @@ if minetest.get_modpath("pipeworks") then
             return inv:add_item("main", stack)
         end,
         can_insert = function(pos, node, stack, direction)
+            if prohibited_items[stack:get_name()] then return false end
             local meta = minetest.get_meta(pos)
             local inv = meta:get_inventory()
             return inv:room_for_item("main", stack)
