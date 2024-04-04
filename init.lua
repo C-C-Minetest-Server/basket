@@ -46,6 +46,8 @@ local prohibited_items = {
     ["digtron:loaded_locked_crate"] = true,
 }
 
+local scan_for_tube_objects = minetest.get_modpath("pipeworks") and pipeworks.scan_for_tube_objects or function() end
+
 local node_def = {
     tiles = {
         "cardboard_box_inner.png^basket_top.png",
@@ -59,7 +61,6 @@ local node_def = {
         local meta = minetest.get_meta(pos)
         local inv = meta:get_inventory()
 
-        meta:set_string("infotext", S("Portable Basket"))
         meta:set_string("formspec", formspec)
         inv:set_size("main", 32)
     end,
@@ -123,6 +124,7 @@ local node_def = {
                 digger_inv:add_item("main", stack)
             end
             minetest.set_node(pos, { name = "air" })
+            scan_for_tube_objects(pos)
             return true
         end
 
@@ -154,6 +156,7 @@ local node_def = {
         stack_meta:set_string("description", meta:get_string("infotext"))
         digger_inv:add_item("main", stack)
         minetest.set_node(pos, { name = "air" })
+        scan_for_tube_objects(pos)
         return true
     end,
     allow_metadata_inventory_put = function(pos, listname, index, stack, player)
@@ -166,7 +169,7 @@ local node_def = {
 }
 
 if minetest.get_modpath("pipeworks") then
-    node_def.after_place_node = pipeworks.after_place
+    node_def.on_construct = pipeworks.scan_for_tube_objects
     node_def.tube = {
         insert_object = function(pos, node, stack, direction)
             local meta = minetest.get_meta(pos)
@@ -182,7 +185,7 @@ if minetest.get_modpath("pipeworks") then
         input_inventory = "main",
         connect_sides = { left = 1, right = 1, back = 1, bottom = 1, top = 1, front = 1 }
     }
-    node_def.after_dig_node = pipeworks.after_dig
+    node_def.on_destruct = pipeworks.scan_for_tube_objects
     node_def.on_rotate = pipeworks.on_rotate
 end
 
