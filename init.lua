@@ -58,11 +58,12 @@ local node_def = {
         "basket_side.png"
     },
     on_construct = function(pos)
+        minetest.debug("C")
         local meta = minetest.get_meta(pos)
         local inv = meta:get_inventory()
 
-        meta:set_string("formspec", formspec)
         inv:set_size("main", 32)
+        meta:set_string("formspec", formspec)
     end,
     on_place = function(itemstack, placer, pointed_thing)
         local stack = itemstack:peek_item(1)
@@ -188,9 +189,14 @@ local node_def = {
     on_blast = function() end,
     on_drop = function(itemstack) return itemstack end,
 }
+default.set_inventory_action_loggers(node_def, "basket")
 
 if minetest.get_modpath("pipeworks") then
-    node_def.on_construct = pipeworks.scan_for_tube_objects
+    local old_on_construct = node_def.on_construct
+    node_def.on_construct = function(pos)
+        old_on_construct(pos)
+        pipeworks.scan_for_tube_objects(pos)
+    end
     node_def.tube = {
         insert_object = function(pos, node, stack, direction)
             local meta = minetest.get_meta(pos)
@@ -215,7 +221,11 @@ minetest.register_node("basket:basket_craftitem", { -- Empty Baskets: Skip on_pl
     description = S("Portable Basket"),
     tiles = node_def.tiles,
     on_construct = function(pos)
-        minetest.set_node(pos, { name = "basket:basket" })
+        minetest.debug("c")
+        local node = minetest.get_node(pos)
+        node.name = "basket:basket"
+        minetest.swap_node(pos, node)
+        node_def.on_construct(pos)
     end,
     node_placement_prediction = "basket:basket",
 })
