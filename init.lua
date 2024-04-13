@@ -159,8 +159,29 @@ local node_def = {
         scan_for_tube_objects(pos)
         return true
     end,
+    allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+        local name = player:get_player_name()
+        if minetest.is_protected(pos, name) then
+            minetest.record_protection_violation(pos, name)
+            return
+        end
+        return count
+    end,
     allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+        local name = player:get_player_name()
+        if minetest.is_protected(pos, name) then
+            minetest.record_protection_violation(pos, name)
+            return
+        end
         if prohibited_items[stack:get_name()] then return 0 end
+        return stack:get_count()
+    end,
+    allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+        local name = player:get_player_name()
+        if minetest.is_protected(pos, name) then
+            minetest.record_protection_violation(pos, name)
+            return
+        end
         return stack:get_count()
     end,
     stack_max = 1,
