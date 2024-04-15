@@ -164,7 +164,7 @@ local node_def = {
         local name = player:get_player_name()
         if minetest.is_protected(pos, name) then
             minetest.record_protection_violation(pos, name)
-            return
+            return 0
         end
         return count
     end,
@@ -172,7 +172,7 @@ local node_def = {
         local name = player:get_player_name()
         if minetest.is_protected(pos, name) then
             minetest.record_protection_violation(pos, name)
-            return
+            return 0
         end
         if prohibited_items[stack:get_name()] then return 0 end
         return stack:get_count()
@@ -181,7 +181,7 @@ local node_def = {
         local name = player:get_player_name()
         if minetest.is_protected(pos, name) then
             minetest.record_protection_violation(pos, name)
-            return
+            return 0
         end
         return stack:get_count()
     end,
