@@ -49,6 +49,7 @@ local prohibited_items = {
 local scan_for_tube_objects = minetest.get_modpath("pipeworks") and pipeworks.scan_for_tube_objects or function() end
 
 local node_def = {
+    description = S("Portable Basket"),
     tiles = {
         "cardboard_box_inner.png^basket_top.png",
         "basket_inner.png",
