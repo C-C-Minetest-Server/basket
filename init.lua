@@ -84,7 +84,7 @@ local node_def = {
 
         return itemstack
     end,
-    on_receive_fields = function(pos, formname, fields, sender)
+    on_receive_fields = function(pos, _, fields, sender)
         local name = sender:get_player_name()
         if minetest.is_protected(pos, name) then
             minetest.record_protection_violation(pos, name)
@@ -103,7 +103,7 @@ local node_def = {
         tubedevice_receiver = 1,
         not_in_creative_inventory = 1,
     },
-    on_dig = function(pos, node, digger)
+    on_dig = function(pos, _, digger)
         if not digger:is_player() then return false end
         local digger_inv = digger:get_inventory()
         local meta = minetest.get_meta(pos)
@@ -116,7 +116,8 @@ local node_def = {
         end
 
         if inv:is_empty("main") then
-            if not minetest.is_creative_enabled(name) or not digger_inv:contains_item("main", "basket:basket_craftitem") then
+            if not minetest.is_creative_enabled(name)
+                or not digger_inv:contains_item("main", "basket:basket_craftitem") then
                 local stack = ItemStack("basket:basket_craftitem")
                 if not digger_inv:room_for_item("main", stack) then
                     return false
@@ -159,7 +160,7 @@ local node_def = {
         scan_for_tube_objects(pos)
         return true
     end,
-    allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+    allow_metadata_inventory_move = function(pos, _, _, _, _, count, player)
         local name = player:get_player_name()
         if minetest.is_protected(pos, name) then
             minetest.record_protection_violation(pos, name)
@@ -167,7 +168,7 @@ local node_def = {
         end
         return count
     end,
-    allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+    allow_metadata_inventory_put = function(pos, _, _, stack, player)
         local name = player:get_player_name()
         if minetest.is_protected(pos, name) then
             minetest.record_protection_violation(pos, name)
@@ -176,7 +177,7 @@ local node_def = {
         if prohibited_items[stack:get_name()] then return 0 end
         return stack:get_count()
     end,
-    allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+    allow_metadata_inventory_take = function(pos, _, _, stack, player)
         local name = player:get_player_name()
         if minetest.is_protected(pos, name) then
             minetest.record_protection_violation(pos, name)
@@ -197,12 +198,12 @@ if minetest.get_modpath("pipeworks") then
         pipeworks.scan_for_tube_objects(pos)
     end
     node_def.tube = {
-        insert_object = function(pos, node, stack, direction)
+        insert_object = function(pos, _, stack)
             local meta = minetest.get_meta(pos)
             local inv = meta:get_inventory()
             return inv:add_item("main", stack)
         end,
-        can_insert = function(pos, node, stack, direction)
+        can_insert = function(pos, _, stack)
             if prohibited_items[stack:get_name()] then return false end
             local meta = minetest.get_meta(pos)
             local inv = meta:get_inventory()

@@ -1,8 +1,11 @@
 read_globals = {
-    "DIR_DELIM", "INIT",
+    "DIR_DELIM",
+    "INIT",
 
-    "minetest", "core",
-    "dump", "dump2",
+    "minetest",
+    "core",
+    "dump",
+    "dump2",
 
     "Raycast",
     "Settings",
@@ -17,6 +20,9 @@ read_globals = {
     "AreaStore",
 
     "vector",
+
+    "default",
+    "pipeworks",
 
     table = {
         fields = {
