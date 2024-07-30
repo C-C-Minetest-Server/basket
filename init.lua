@@ -59,7 +59,6 @@ local node_def = {
         "basket_side.png"
     },
     on_construct = function(pos)
-        minetest.debug("C")
         local meta = minetest.get_meta(pos)
         local inv = meta:get_inventory()
 
@@ -222,7 +221,6 @@ minetest.register_node("basket:basket_craftitem", { -- Empty Baskets: Skip on_pl
     description = S("Portable Basket"),
     tiles = node_def.tiles,
     on_construct = function(pos)
-        minetest.debug("c")
         local node = minetest.get_node(pos)
         node.name = "basket:basket"
         minetest.swap_node(pos, node)
