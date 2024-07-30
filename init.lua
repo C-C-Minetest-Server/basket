@@ -67,7 +67,8 @@ local node_def = {
     end,
     on_place = function(itemstack, placer, pointed_thing)
         local stack = itemstack:peek_item(1)
-        local itemstack, pos = minetest.item_place(itemstack, placer, pointed_thing)
+        local pos
+        itemstack, pos = minetest.item_place(itemstack, placer, pointed_thing)
 
         if not pos then return itemstack end
         local stack_meta = stack:get_meta()
@@ -80,8 +81,6 @@ local node_def = {
         end
         local description = stack_meta:get_string("description")
         meta:set_string("infotext", description)
-
-        itemstack:take_item()
 
         return itemstack
     end,
