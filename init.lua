@@ -25,11 +25,13 @@
 ]]
 
 local S = minetest.get_translator("basket")
+local F = minetest.formspec_escape
+local FS = function(...) return F(S(...)) end
 
 local formspec = "size[8,10]" ..
-    "label[0,0.2;" .. S("Name:") .. "]" ..
+    "label[0,0.2;" .. FS("Name:") .. "]" ..
     "field[1.5,0.3;5,1;infotext;;${basket_description}]" ..
-    "button[7,0;1,1;btn;OK]" ..
+    "button[7,0;1,1;btn;" .. FS("OK") .. "]" ..
     "list[context;main;0,1.3;8,4;]" ..
     "list[current_player;main;0,5.85;8,1;]" ..
     "list[current_player;main;0,7.08;8,3;8]" ..
