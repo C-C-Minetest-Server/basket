@@ -28,7 +28,7 @@ local S = minetest.get_translator("basket")
 
 local formspec = "size[8,10]" ..
     "label[0,0.2;" .. S("Name:") .. "]" ..
-    "field[1.5,0.3;5,1;infotext;;${infotext}]" ..
+    "field[1.5,0.3;5,1;infotext;;${basket_description}]" ..
     "button[7,0;1,1;btn;OK]" ..
     "list[context;main;0,1.3;8,4;]" ..
     "list[current_player;main;0,5.85;8,1;]" ..
@@ -47,6 +47,54 @@ local prohibited_items = {
 }
 
 local scan_for_tube_objects = minetest.get_modpath("pipeworks") and pipeworks.scan_for_tube_objects or function() end
+local occupied_translated_match = "\n" .. string.char(0x1b) .. "(T@basket)Occupied: " .. string.char(0x1b) .. "F"
+
+local function count_occupied_slots(inv, listname)
+    local list = inv:get_list(listname)
+    local count = 0
+    for _, item in ipairs(list) do
+        if not item:is_empty() then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+local function get_node_description(meta, fallback)
+    local description = meta:get_string("basket_description")
+    if description == "" then
+        local old_description = meta:get_string("infotext")
+        if not string.find(old_description, occupied_translated_match, 1, true) then
+            description = old_description
+            meta:set_string("basket_description", description)
+        end
+    end
+    return description == "" and fallback or description
+end
+
+local function update_node_meta(meta, inv)
+    if meta:get_string("formspec") ~= formspec then
+        meta:set_string("formspec", formspec)
+    end
+
+    local description = get_node_description(meta, S("Portable Basket"))
+
+    inv = inv or meta:get_inventory()
+    local occupied_slots = count_occupied_slots(inv, "main")
+    meta:set_string("infotext", description .. "\n" ..
+        S("Occupied: @1/@2", occupied_slots, inv:get_size("main")))
+end
+
+local function get_stack_description(meta)
+    local description = meta:get_string("basket_description")
+    if description == "" then
+        local old_description = meta:get_string("description")
+        if not string.find(old_description, occupied_translated_match, 1, true) then
+            description = old_description
+        end
+    end
+    return description
+end
 
 local node_def = {
     description = S("Portable Basket"),
@@ -79,9 +127,15 @@ local node_def = {
         if inv_table then
             inv:set_list("main", inv_table)
         end
-        local description = stack_meta:get_string("description")
-        meta:set_string("infotext", description)
+        local description = get_stack_description(stack_meta)
+        meta:set_string("basket_description", description)
+        update_node_meta(meta, inv)
 
+        return itemstack
+    end,
+    on_rightclick = function(pos, _, _, itemstack)
+        local meta = minetest.get_meta(pos)
+        update_node_meta(meta)
         return itemstack
     end,
     on_receive_fields = function(pos, _, fields, sender)
@@ -93,7 +147,8 @@ local node_def = {
         local meta = minetest.get_meta(pos)
         local description = fields["infotext"] or ""
         if not fields["btn"] then return end
-        meta:set_string("infotext", description)
+        meta:set_string("basket_description", description)
+        update_node_meta(meta)
     end,
     groups = {
         choppy = 2,
@@ -137,8 +192,12 @@ local node_def = {
 
         local inv_table_raw = inv:get_list("main")
         local inv_table = {}
+        local inv_occupied = 0
         for x, y in ipairs(inv_table_raw) do
             inv_table[x] = y:to_string()
+            if not y:is_empty() then
+                inv_occupied = inv_occupied + 1
+            end
         end
         inv_table = minetest.serialize(inv_table)
 
@@ -154,7 +213,9 @@ local node_def = {
         end
 
         stack_meta:set_string("inv", inv_table)
-        stack_meta:set_string("description", meta:get_string("infotext"))
+        stack_meta:set_string("basket_description", get_node_description(meta))
+        stack_meta:set_string("description", get_node_description(meta, S("Portable Basket")) .. "\n" ..
+            S("Occupied: @1/@2", inv_occupied, inv:get_size("main")))
         digger_inv:add_item("main", stack)
         minetest.set_node(pos, { name = "air" })
         scan_for_tube_objects(pos)
@@ -184,6 +245,15 @@ local node_def = {
             return 0
         end
         return stack:get_count()
+    end,
+    on_metadata_inventory_move = function(pos)
+        update_node_meta(minetest.get_meta(pos))
+    end,
+    on_metadata_inventory_put = function(pos)
+        update_node_meta(minetest.get_meta(pos))
+    end,
+    on_metadata_inventory_take = function(pos)
+        update_node_meta(minetest.get_meta(pos))
     end,
     stack_max = 1,
     on_blast = function() end,
