@@ -30,7 +30,7 @@ local FS = function(...) return F(S(...)) end
 
 local formspec = "size[8,10]" ..
     "label[0,0.2;" .. FS("Name:") .. "]" ..
-    "field[1.5,0.3;5,1;infotext;;${basket_description}]" ..
+    "field[1.3,0.3;5,1;infotext;;${basket_description}]" ..
     "button[7,0;1,1;btn;" .. FS("OK") .. "]" ..
     "list[context;main;0,1.3;8,4;]" ..
     "list[current_player;main;0,5.85;8,1;]" ..
@@ -38,6 +38,44 @@ local formspec = "size[8,10]" ..
     "listring[context;main]" ..
     "listring[current_player;main]" ..
     default.get_hotbar_bg(0, 5.85)
+
+local teacher_enabled = false
+if minetest.get_modpath("teacher_core") then
+    teacher_enabled = true
+
+    teacher.register_turorial("basket:basket_basic", {
+        title = S("Portable Baskets"),
+        triggers = {
+            {
+                name = "approach_node",
+                nodenames = { "basket:basket" },
+            },
+            {
+                name = "obtain_item",
+                itemname = "basket:basket_craftitem",
+            },
+            {
+                name = "obtain_item",
+                itemname = "basket:basket",
+            },
+        },
+
+        {
+            texture = "basket_teacher_1.png",
+            text = {
+                S("Baskets are portable storage nodes. They act like normal chests and keep their contents when dug."),
+                S("You can rename a basket. Type in the name, then click on \"@1\".", S("OK")),
+            }
+        },
+        {
+            texture = "basket_teacher_2.png",
+            text = S("You cannot stack baskets with occupied slots on each other, "
+                .. "nor can you put such baskets inside another one."),
+        },
+    })
+
+    formspec = formspec .. "button[6,0;1,1;teacher;?]"
+end
 
 -- Deny these items to reduce itemstring size
 local prohibited_items = {
@@ -141,6 +179,10 @@ local node_def = {
         return itemstack
     end,
     on_receive_fields = function(pos, _, fields, sender)
+        if fields["teacher"] and teacher_enabled and sender:is_player() then
+            teacher.simple_show(sender, "basket:basket_basic")
+            return
+        end
         local name = sender:get_player_name()
         if minetest.is_protected(pos, name) then
             minetest.record_protection_violation(pos, name)

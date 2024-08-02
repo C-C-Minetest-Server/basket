@@ -23,6 +23,7 @@ read_globals = {
 
     "default",
     "pipeworks",
+    "teacher",
 
     table = {
         fields = {
