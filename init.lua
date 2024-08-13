@@ -113,9 +113,7 @@ local function get_node_description(meta, fallback)
 end
 
 local function update_node_meta(meta, inv)
-    if meta:get_string("formspec") ~= formspec then
-        meta:set_string("formspec", formspec)
-    end
+    meta:set_string("formspec", formspec)
 
     local description = get_node_description(meta, S("Portable Basket"))
 
@@ -315,7 +313,9 @@ if minetest.get_modpath("pipeworks") then
         insert_object = function(pos, _, stack)
             local meta = minetest.get_meta(pos)
             local inv = meta:get_inventory()
-            return inv:add_item("main", stack)
+            local rtn = inv:add_item("main", stack)
+            update_node_meta(meta, inv)
+            return rtn
         end,
         can_insert = function(pos, _, stack)
             if prohibited_items[stack:get_name()] then return false end
