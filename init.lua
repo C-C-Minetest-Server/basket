@@ -150,6 +150,9 @@ local node_def = {
 
         inv:set_size("main", 32)
         meta:set_string("formspec", formspec)
+        meta:set_string("formspec", formspec)
+        meta:set_string("infotext", S("Portable Basket") .. "\n" ..
+            S("Occupied: @1/@2", 0, 32))
     end,
     on_place = function(itemstack, placer, pointed_thing)
         local stack = itemstack:peek_item(1)
