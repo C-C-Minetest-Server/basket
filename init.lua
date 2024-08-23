@@ -303,6 +303,7 @@ local node_def = {
     stack_max = 1,
     on_blast = function() end,
     on_drop = function(itemstack) return itemstack end,
+	sounds = default.node_sound_wood_defaults(),
 }
 default.set_inventory_action_loggers(node_def, "basket")
 
@@ -344,6 +345,7 @@ minetest.register_node("basket:basket_craftitem", { -- Empty Baskets: Skip on_pl
         node_def.on_construct(pos)
     end,
     node_placement_prediction = "basket:basket",
+	sounds = default.node_sound_wood_defaults(),
 })
 
 if minetest.get_modpath("farming") then
