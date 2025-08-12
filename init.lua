@@ -28,6 +28,9 @@ local S = minetest.get_translator("basket")
 local F = minetest.formspec_escape
 local FS = function(...) return F(S(...)) end
 
+local basket = {}
+_G.basket = basket
+
 local formspec = "size[8,10]" ..
     "label[0,0.2;" .. FS("Name:") .. "]" ..
     "field[1.3,0.3;5,1;infotext;;${basket_description}]" ..
@@ -89,17 +92,6 @@ local prohibited_items = {
 local scan_for_tube_objects = minetest.get_modpath("pipeworks") and pipeworks.scan_for_tube_objects or function() end
 local occupied_translated_match = "\n" .. string.char(0x1b) .. "(T@basket)Occupied: " .. string.char(0x1b) .. "F"
 
-local function count_occupied_slots(inv, listname)
-    local list = inv:get_list(listname)
-    local count = 0
-    for _, item in ipairs(list) do
-        if not item:is_empty() then
-            count = count + 1
-        end
-    end
-    return count
-end
-
 local function get_node_description(meta, fallback)
     local description = meta:get_string("basket_description")
     if description == "" then
@@ -118,9 +110,44 @@ local function update_node_meta(meta, inv)
     local description = get_node_description(meta, S("Portable Basket"))
 
     inv = inv or meta:get_inventory()
-    local occupied_slots = count_occupied_slots(inv, "main")
+    local list = inv:get_list("main")
+
+    local occupied_slots = 0
+    local item_counts = {}
+    local items = {}
+    for _, item in ipairs(list) do
+        if not item:is_empty() then
+            occupied_slots = occupied_slots + 1
+
+            local item_name = item:get_name()
+            if not item_counts[item_name] then
+                item_counts[item_name] = item:get_count()
+                items[#items+1] = item_name
+            else
+                item_counts[item_name] = item_counts[item_name] + item:get_count()
+            end
+        end
+    end
+
+    table.sort(items, function(a, b)
+        return item_counts[a] > item_counts[b]
+    end)
+
+    local item_list = ""
+    for i = 1, math.min(3, #items) do
+        local item_def = minetest.registered_items[items[i]]
+        local item_description = item_def and (item_def.short_description or item_def.description) or items[i]
+        item_description = string.trim(string.split(item_description, "\n")[1])
+        local count = item_counts[items[i]]
+
+        item_list = item_list .. "\n" .. item_description .. " x" .. count
+    end
+    if #items > 3 then
+        item_list = item_list .. "\n" .. S("... and more")
+    end
+
     meta:set_string("infotext", description .. "\n" ..
-        S("Occupied: @1/@2", occupied_slots, inv:get_size("main")))
+        S("Occupied: @1/@2", occupied_slots, inv:get_size("main")) .. item_list)
 end
 
 local function get_stack_description(meta)
@@ -133,6 +160,8 @@ local function get_stack_description(meta)
     end
     return description
 end
+
+function basket.pack_basket() end
 
 local node_def = {
     description = S("Portable Basket"),
@@ -235,6 +264,8 @@ local node_def = {
             return false
         end
 
+        update_node_meta(meta, inv)
+
         local inv_table_raw = inv:get_list("main")
         local inv_table = {}
         local inv_occupied = 0
@@ -259,8 +290,7 @@ local node_def = {
 
         stack_meta:set_string("inv", inv_table)
         stack_meta:set_string("basket_description", get_node_description(meta))
-        stack_meta:set_string("description", get_node_description(meta, S("Portable Basket")) .. "\n" ..
-            S("Occupied: @1/@2", inv_occupied, inv:get_size("main")))
+        stack_meta:set_string("description", meta:get_string("infotext"))
         digger_inv:add_item("main", stack)
         minetest.set_node(pos, { name = "air" })
         scan_for_tube_objects(pos)

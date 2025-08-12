@@ -1,3 +1,7 @@
+globals = {
+    "basket",
+}
+
 read_globals = {
     "DIR_DELIM",
     "INIT",
