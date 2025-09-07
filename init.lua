@@ -104,18 +104,12 @@ local function get_node_description(meta, fallback)
     return description == "" and fallback or description
 end
 
-local function update_node_meta(meta, inv)
-    meta:set_string("formspec", formspec)
-
-    local description = get_node_description(meta, S("Portable Basket"))
-
-    inv = inv or meta:get_inventory()
-    local list = inv:get_list("main")
-
+function basket.get_occupied_slots_and_item_list_description(list)
     local occupied_slots = 0
     local item_counts = {}
     local items = {}
     for _, item in ipairs(list) do
+        item = ItemStack(item)
         if not item:is_empty() then
             occupied_slots = occupied_slots + 1
 
@@ -146,11 +140,26 @@ local function update_node_meta(meta, inv)
         item_list = item_list .. "\n" .. S("... and more")
     end
 
-    meta:set_string("infotext", description .. "\n" ..
-        S("Occupied: @1/@2", occupied_slots, inv:get_size("main")) .. item_list)
+    return occupied_slots, item_list
 end
 
-local function get_stack_description(meta)
+function basket.get_infotext(meta, list)
+    local description = get_node_description(meta, S("Portable Basket"))
+    local occupied_slots, item_list = basket.get_occupied_slots_and_item_list_description(list)
+    return description .. "\n" ..
+        S("Occupied: @1/@2", occupied_slots, #list) .. item_list
+end
+
+function basket.update_node_meta(meta, inv)
+    meta:set_string("formspec", formspec)
+
+    inv = inv or meta:get_inventory()
+    local list = inv:get_list("main")
+
+    meta:set_string("infotext", basket.get_infotext(meta, list))
+end
+
+function basket.get_stack_description(meta)
     local description = meta:get_string("basket_description")
     if description == "" then
         local old_description = meta:get_string("description")
@@ -197,15 +206,15 @@ local node_def = {
         if inv_table then
             inv:set_list("main", inv_table)
         end
-        local description = get_stack_description(stack_meta)
+        local description = basket.get_stack_description(stack_meta)
         meta:set_string("basket_description", description)
-        update_node_meta(meta, inv)
+        basket.update_node_meta(meta, inv)
 
         return itemstack
     end,
     on_rightclick = function(pos, _, _, itemstack)
         local meta = minetest.get_meta(pos)
-        update_node_meta(meta)
+        basket.update_node_meta(meta)
         return itemstack
     end,
     on_receive_fields = function(pos, _, fields, sender)
@@ -222,7 +231,7 @@ local node_def = {
         local description = fields["infotext"] or ""
         if not fields["btn"] then return end
         meta:set_string("basket_description", description)
-        update_node_meta(meta)
+        basket.update_node_meta(meta)
     end,
     groups = {
         choppy = 2,
@@ -264,7 +273,7 @@ local node_def = {
             return false
         end
 
-        update_node_meta(meta, inv)
+        basket.update_node_meta(meta, inv)
 
         local inv_table_raw = inv:get_list("main")
         local inv_table = {}
@@ -322,13 +331,13 @@ local node_def = {
         return stack:get_count()
     end,
     on_metadata_inventory_move = function(pos)
-        update_node_meta(minetest.get_meta(pos))
+        basket.update_node_meta(minetest.get_meta(pos))
     end,
     on_metadata_inventory_put = function(pos)
-        update_node_meta(minetest.get_meta(pos))
+        basket.update_node_meta(minetest.get_meta(pos))
     end,
     on_metadata_inventory_take = function(pos)
-        update_node_meta(minetest.get_meta(pos))
+        basket.update_node_meta(minetest.get_meta(pos))
     end,
     stack_max = 1,
     on_blast = function() end,
@@ -348,7 +357,7 @@ if minetest.get_modpath("pipeworks") then
             local meta = minetest.get_meta(pos)
             local inv = meta:get_inventory()
             local rtn = inv:add_item("main", stack)
-            update_node_meta(meta, inv)
+            basket.update_node_meta(meta, inv)
             return rtn
         end,
         can_insert = function(pos, _, stack)
