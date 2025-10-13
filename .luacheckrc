@@ -24,6 +24,7 @@ read_globals = {
 
     "vector",
 
+    "default",
     "pipeworks",
     "teacher",
     "xcompat",
