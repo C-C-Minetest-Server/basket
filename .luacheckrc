@@ -6,7 +6,6 @@ read_globals = {
     "DIR_DELIM",
     "INIT",
 
-    "minetest",
     "core",
     "dump",
     "dump2",
@@ -28,6 +27,7 @@ read_globals = {
     "default",
     "pipeworks",
     "teacher",
+    "xcompat",
 
     table = {
         fields = {
