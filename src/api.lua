@@ -148,7 +148,7 @@ function basket.get_basket_infotext(basket_data)
             local item_description = item_def and (item_def.short_description or item_def.description) or items[1]
             item_description = string.trim(string.split(item_description, "\n")[1])
 
-            description = item_description
+            description = S("A basket of @1", item_description)
         else
             description = S("Portable Basket")
         end
