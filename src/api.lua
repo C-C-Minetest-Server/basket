@@ -71,18 +71,20 @@ function basket.set_basket_node_data(pos, basket_data)
         return false
     end
 
+    local occupied_slots, item_counts, items = basket.count_basket_item(basket_data)
     local meta = core.get_meta(pos)
     local inv = meta:get_inventory()
 
     meta:set_string("basket_description", basket_data.description or "")
-    meta:set_string("infotext", basket.get_basket_infotext(basket_data))
+    meta:set_string("infotext", basket.get_basket_infotext(occupied_slots, item_counts, items, basket_data))
     inv:set_list("main", basket_data.items)
 
     return true
 end
 
 function basket.get_basket_itemstack(basket_data)
-    if #basket_data.items == 0 then
+    local occupied_slots, item_counts, items = basket.count_basket_item(basket_data)
+    if occupied_slots == 0 then
         return ItemStack("basket:basket_craftitem")
     end
 
@@ -95,16 +97,14 @@ function basket.get_basket_itemstack(basket_data)
 
     meta:set_string("inv", core.serialize(inv_table))
     meta:set_string("basket_description", basket_data.description or "")
-    meta:set_string("description", basket.get_basket_infotext(basket_data))
+    meta:set_string("description", basket.get_basket_infotext(occupied_slots, item_counts, items, basket_data))
 
     return itemstack
 end
 
 -- Internal, stability not guaranteed
 
-function basket.get_basket_infotext(basket_data)
-    local infotext = "\n"
-
+function basket.count_basket_item(basket_data)
     local occupied_slots = 0
     local item_counts = {}
     local items = {}
@@ -126,7 +126,11 @@ function basket.get_basket_infotext(basket_data)
         return item_counts[a] > item_counts[b]
     end)
 
-    infotext = infotext .. S("Occupied: @1/@2", occupied_slots, #basket_data.items)
+    return occupied_slots, item_counts, items
+end
+
+function basket.get_basket_infotext(occupied_slots, item_counts, items, basket_data)
+    local infotext = "\n" .. S("Occupied: @1/@2", occupied_slots, #basket_data.items)
 
     for i = 1, math.min(3, #items) do
         local item_def = core.registered_items[items[i]]
@@ -161,7 +165,8 @@ function basket.update_basket_node_meta(pos)
     local basket_data = basket.get_basket_from_node(pos)
     if not basket_data then return end
 
+    local occupied_slots, item_counts, items = basket.count_basket_item(basket_data)
     local meta = core.get_meta(pos)
     meta:set_string("formspec", basket.formspec)
-    meta:set_string("infotext", basket.get_basket_infotext(basket_data))
+    meta:set_string("infotext", basket.get_basket_infotext(occupied_slots, item_counts, items, basket_data))
 end
