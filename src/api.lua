@@ -4,6 +4,8 @@
 -- SPDX-LICENSE-IDENTIFIER: LGPL-2.1-OR-LATER
 
 local S = core.get_translator("basket")
+local F = core.formspec_escape
+local FS = function(...) return F(S(...)) end
 
 local occupied_translated_match = "\n" .. string.char(0x1b) .. "(T@basket)Occupied: " .. string.char(0x1b) .. "F"
 
@@ -19,9 +21,41 @@ local function get_node_description(meta, fallback)
     return description == "" and fallback or description
 end
 
+local formspec = "size[8,10]" ..
+    "label[0,0.2;" .. FS("Name:") .. "]" ..
+    "field[1.3,0.3;5,1;infotext;;${basket_description}]" ..
+    "button[7,0;1,1;btn;" .. FS("OK") .. "]" ..
+    "list[context;main;0,1.3;8,4;]" ..
+    "list[current_player;main;0,5.85;8,1;]" ..
+    "list[current_player;main;0,7.08;8,3;8]" ..
+    "listring[context;main]" ..
+    "listring[current_player;main]"
+
+if core.global_exists("default") then
+   formspec = formspec .. default.get_hotbar_bg(0, 5.85)
+end
+
+if core.get_modpath("teacher_core") then
+    formspec = formspec .. "button[6,0;1,1;teacher;?]"
+end
+
+function basket.get_empty_basket()
+    local items = {}
+    for i = 1, 32 do
+        items[i] = ItemStack("")
+    end
+    return {
+        description = "",
+        items = items,
+    }
+end
+
 function basket.get_basket_from_node(pos)
     local node = core.get_node(pos)
-    if node.name ~= "basket:basket" then
+    local name = node.name
+    if name == "basket:basket_craftitem" then
+        return basket.get_empty_basket()
+    elseif name ~= "basket:basket" then
         return nil
     end
 
@@ -40,14 +74,7 @@ end
 function basket.get_basket_from_item(itemstack)
     local name = itemstack:get_name()
     if name == "basket:basket_craftitem" then
-        local items = {}
-        for i = 1, 32 do
-            items[i] = ItemStack("")
-        end
-        return {
-            description = "",
-            items = items,
-        }
+        return basket.get_empty_basket()
     elseif name ~= "basket:basket" then
         return nil
     end
@@ -161,12 +188,36 @@ function basket.get_basket_infotext(occupied_slots, item_counts, items, basket_d
     return description .. infotext
 end
 
+if core.global_exists("pipeworks") then
+    function basket.get_formspec(pos, meta)
+        meta = meta or core.get_meta(pos)
+
+        local formspec_n = formspec
+        formspec_n = formspec_n .. "container[0,1]" ..
+            pipeworks.fs_helpers.cycling_button(
+                meta,
+                pipeworks.button_base,
+                "splitstacks",
+                {
+                    pipeworks.button_off,
+                    pipeworks.button_on
+                }
+            ) .. pipeworks.button_label .. "container_end[]"
+
+        return formspec_n
+    end
+else
+    function basket.get_formspec()
+        return formspec
+    end
+end
+
 function basket.update_basket_node_meta(pos)
     local basket_data = basket.get_basket_from_node(pos)
     if not basket_data then return end
 
     local occupied_slots, item_counts, items = basket.count_basket_item(basket_data)
     local meta = core.get_meta(pos)
-    meta:set_string("formspec", basket.formspec)
+    meta:set_string("formspec", basket.get_formspec(pos, meta))
     meta:set_string("infotext", basket.get_basket_infotext(occupied_slots, item_counts, items, basket_data))
 end

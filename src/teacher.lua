@@ -3,10 +3,6 @@
 -- Copyright (c) 2022, 2024-2025  1F616EMO
 -- SPDX-LICENSE-IDENTIFIER: LGPL-2.1-OR-LATER
 
-if not core.get_modpath("teacher_core") then
-    return
-end
-
 local S = core.get_translator("basket")
 
 teacher.register_turorial("basket:basket_basic", {
@@ -39,5 +35,3 @@ teacher.register_turorial("basket:basket_basic", {
             .. "nor can you put such baskets inside another one."),
     },
 })
-
-basket.formspec = basket.formspec .. "button[6,0;1,1;teacher;?]"

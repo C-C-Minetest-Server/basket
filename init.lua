@@ -6,24 +6,14 @@
 local S = core.get_translator("basket")
 local F = core.formspec_escape
 local FS = function(...) return F(S(...)) end
+local MP = core.get_modpath("basket")
 
 basket = {}
 
-basket.formspec = "size[8,10]" ..
-    "label[0,0.2;" .. FS("Name:") .. "]" ..
-    "field[1.3,0.3;5,1;infotext;;${basket_description}]" ..
-    "button[7,0;1,1;btn;" .. FS("OK") .. "]" ..
-    "list[context;main;0,1.3;8,4;]" ..
-    "list[current_player;main;0,5.85;8,1;]" ..
-    "list[current_player;main;0,7.08;8,3;8]" ..
-    "listring[context;main]" ..
-    "listring[current_player;main]"
+dofile(MP .. DIR_DELIM .. "src" .. DIR_DELIM .. "api.lua")
+dofile(MP .. DIR_DELIM .. "src" .. DIR_DELIM .. "node.lua")
 
-if core.global_exists("default") then
-   basket.formspec = basket.formspec .. default.get_hotbar_bg(0, 5.85)
+if core.get_modpath("teacher_core") then
+    dofile(MP .. DIR_DELIM .. "src" .. DIR_DELIM .. "teacher.lua")
 end
 
-local MP = core.get_modpath("basket")
-dofile(MP .. DIR_DELIM .. "src" .. DIR_DELIM .. "api.lua")
-dofile(MP .. DIR_DELIM .. "src" .. DIR_DELIM .. "teacher.lua")
-dofile(MP .. DIR_DELIM .. "src" .. DIR_DELIM .. "node.lua")

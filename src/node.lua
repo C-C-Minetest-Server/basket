@@ -41,7 +41,7 @@ local node_def = {
         local inv = meta:get_inventory()
 
         inv:set_size("main", 32)
-        meta:set_string("formspec", basket.formspec)
+        meta:set_string("formspec", basket.get_formspec(pos, meta))
         meta:set_string("infotext", S("Portable Basket") .. "\n" ..
             S("Occupied: @1/@2", 0, 32))
     end,
@@ -132,7 +132,7 @@ local node_def = {
     sounds = default.node_sound_wood_defaults(),
 }
 
-if core.get_modpath("pipeworks") then
+if core.global_exists("pipeworks") then
     local old_on_construct = node_def.on_construct
     node_def.on_construct = function(pos)
         old_on_construct(pos)
@@ -150,6 +150,9 @@ if core.get_modpath("pipeworks") then
             if basket.prohibited_items[stack:get_name()] then return false end
             local meta = core.get_meta(pos)
             local inv = meta:get_inventory()
+            if meta:get_int("splitstacks") == 1 then
+                stack = stack:peek_item(1)
+            end
             return inv:room_for_item("main", stack)
         end,
         input_inventory = "main",
@@ -157,6 +160,15 @@ if core.get_modpath("pipeworks") then
     }
     node_def.on_destruct = pipeworks.scan_for_tube_objects
     node_def.on_rotate = pipeworks.on_rotate
+    local old_on_receive_fields = node_def.on_receive_fields
+    node_def.on_receive_fields = function(pos, _, fields, sender)
+        if fields["fs_helpers_cycling:1:splitstacks"] or fields["fs_helpers_cycling:0:splitstacks"] then
+            pipeworks.fs_helpers.on_receive_fields(pos, fields)
+            local meta = core.get_meta(pos)
+            meta:set_string("formspec", basket.get_formspec(pos, meta))
+        end
+        return old_on_receive_fields(pos, _, fields, sender)
+    end
 end
 
 core.register_node("basket:basket", table.copy(node_def))
