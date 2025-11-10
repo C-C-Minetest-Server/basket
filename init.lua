@@ -17,8 +17,11 @@ basket.formspec = "size[8,10]" ..
     "list[current_player;main;0,5.85;8,1;]" ..
     "list[current_player;main;0,7.08;8,3;8]" ..
     "listring[context;main]" ..
-    "listring[current_player;main]" ..
-    (core.global_exists("default") and default.get_hotbar_bg(0, 5.85) or "")
+    "listring[current_player;main]"
+
+if core.global_exists("default") then
+   basket.formspec = basket.formspec .. default.get_hotbar_bg(0, 5.85)
+end
 
 local MP = core.get_modpath("basket")
 dofile(MP .. DIR_DELIM .. "src" .. DIR_DELIM .. "api.lua")
