@@ -129,7 +129,7 @@ local node_def = {
     stack_max = 1,
     on_blast = function() end,
     on_drop = function(itemstack) return itemstack end,
-    sounds = default.node_sound_wood_defaults(),
+    sounds = xcompat.node_sound_wood_defaults(),
 }
 
 if core.global_exists("pipeworks") then
