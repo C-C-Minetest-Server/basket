@@ -81,9 +81,15 @@ function basket.get_basket_from_item(itemstack)
 
     local meta = itemstack:get_meta()
     local inv_table = core.deserialize(meta:get_string("inv"))
+
+    if type(inv_table) ~= "table" then
+        return basket.get_empty_basket()
+    end
+
     for i, item in ipairs(inv_table) do
         inv_table[i] = ItemStack(item)
     end
+
     local description = get_node_description(meta, "")
 
     return {
