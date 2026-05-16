@@ -23,7 +23,7 @@ end
 
 local function get_short_description(itemstring)
     local def = core.registered_items[itemstring]
-    local short_description = def and def.short_description or def.description
+    local short_description = def and (def.short_description or def.description)
 
     if type(short_description) ~= "string" then
         return itemstring
