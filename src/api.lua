@@ -21,6 +21,27 @@ local function get_node_description(meta, fallback)
     return description == "" and fallback or description
 end
 
+local function get_short_description(itemstring)
+    local def = core.registered_items[itemstring]
+    local short_description = def and def.short_description or def.description
+
+    if type(short_description) ~= "string" then
+        return itemstring
+    end
+
+    if string.find(short_description, "\n") then
+        -- We risk chopping translation escapes in half
+        -- so we have to translate it into English first.
+        -- It's not our fault! Go ask mod creators to explicitly give us a
+        -- working short_description, please.
+
+        short_description = core.get_translated_string("en", short_description)
+        short_description = string.trim(string.split(short_description, "\n")[1])
+    end
+
+    return short_description
+end
+
 local formspec = "size[8,10]" ..
     "label[0,0.2;" .. FS("Name:") .. "]" ..
     "field[1.3,0.3;5,1;infotext;;${basket_description}]" ..
@@ -166,9 +187,7 @@ function basket.get_basket_infotext(occupied_slots, item_counts, items, basket_d
     local infotext = "\n" .. S("Occupied: @1/@2", occupied_slots, #basket_data.items)
 
     for i = 1, math.min(3, #items) do
-        local item_def = core.registered_items[items[i]]
-        local item_description = item_def and (item_def.short_description or item_def.description) or items[i]
-        item_description = string.trim(string.split(item_description, "\n")[1])
+        local item_description = get_short_description(items[i])
         local count = item_counts[items[i]]
 
         infotext = infotext .. "\n" .. item_description .. " x" .. count
@@ -181,9 +200,7 @@ function basket.get_basket_infotext(occupied_slots, item_counts, items, basket_d
     -- Auto description
     if not description then
         if #items == 1 then
-            local item_def = core.registered_items[items[1]]
-            local item_description = item_def and (item_def.short_description or item_def.description) or items[1]
-            item_description = string.trim(string.split(item_description, "\n")[1])
+            local item_description = get_short_description(items[1])
 
             description = S("A basket of @1", item_description)
         else
